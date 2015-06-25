@@ -1,0 +1,13 @@
+// $Id$
+// vim:ft=javascript
+
+// If your extension references something external, use ARG_WITH
+// ARG_WITH("zqf", "for zqf support", "no");
+
+// Otherwise, use ARG_ENABLE
+// ARG_ENABLE("zqf", "enable zqf support", "no");
+
+if (PHP_ZQF != "no") {
+	EXTENSION("zqf", "zqf.c");
+}
+
