@@ -39,11 +39,12 @@
 
 /* 
   	Declare any global variables you may need between the BEGIN
-	and END macros here:  */   
+	and END macros here:    */ 
 
 ZEND_BEGIN_MODULE_GLOBALS(zqf)
-	long  counter,zqfflag;
-ZEND_END_MODULE_GLOBALS(zqf)
+  /*HashTable *configs;*/
+  long  counter,zqfflag;
+ZEND_END_MODULE_GLOBALS(zqf)  
 
 /* In every utility function you add that needs to use variables 
    in php_zqf_globals, call TSRMLS_FETCH(); after declaring other 
@@ -62,7 +63,9 @@ ZEND_END_MODULE_GLOBALS(zqf)
 #endif
 extern zend_module_entry zqf_module_entry;
 #define phpext_zqf_ptr &zqf_module_entry
-#endif  /* PHP_ZQF_H */
+#endif	/* PHP_ZQF_H */
+
+
 /*
  * Local variables:
  * tab-width: 4
