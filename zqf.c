@@ -45,8 +45,13 @@ ZEND_BEGIN_ARG_INFO_EX(zqf_savefile_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(0,mode)
     ZEND_ARG_INFO(0,ext)
 ZEND_END_ARG_INFO()
-
-
+ZEND_BEGIN_ARG_INFO_EX(zqf_findrepetition_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0,zqf_arr)
+ZEND_END_ARG_INFO()
+ZEND_BEGIN_ARG_INFO_EX(zqf_findval_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0,zqfarr)
+    ZEND_ARG_INFO(0,zqfval)
+ZEND_END_ARG_INFO()
 
 
 static void php_zqf_init_globals(zend_zqf_globals *zqf_globals)
@@ -121,6 +126,116 @@ static void php_zqf_init_globals(zend_zqf_globals *zqf_globals)
 
 /* {{{ PHP_MINFO_FUNCTION
  */
+
+
+
+static int getzqfv(long val,int arr[],int len){
+    int low;
+    int high;
+    int mid;
+    low=0;
+    high=(int)(len-1);
+     while(low<=high){
+        mid=(int)((low+high)/2);
+        if(arr[mid]<val){
+          low=(int)(mid+1);
+        }else if(arr[mid]>val){
+          high=(int)(mid-1);
+        }else{
+          return mid;
+        }
+    }
+    return -1;
+}
+
+
+/*二分法查找一维数组一个数*/
+PHP_METHOD(zqf,findval)
+{
+    zval *zqfarr;
+    long zqfval;
+    int   zqf_arr_count;
+    HashTable *zqf_arr_hash;
+    zval **zqf_item;
+    char* key;
+    ulong idx;
+    int rmid,i,j,tmp;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "al", &zqfarr,&zqfval) == FAILURE) {
+      RETURN_NULL();
+    }
+    zqf_arr_hash = Z_ARRVAL_P(zqfarr);
+    zqf_arr_count = zend_hash_num_elements(zqf_arr_hash);
+    int data[zqf_arr_count];  
+    zend_hash_internal_pointer_reset(zqf_arr_hash);
+    for (i = 0; i < zqf_arr_count; ++i)
+    {
+        zend_hash_get_current_data(zqf_arr_hash,(void**)&zqf_item); 
+        data[i]=(int)Z_STRVAL_PP(zqf_item);  
+        zend_hash_move_forward(zqf_arr_hash);  
+    }
+    for (i = 0; i < zqf_arr_count; ++i)
+    {
+      for (j = 0; j < zqf_arr_count; ++j)
+      {
+        if(data[i]<data[j]){
+          tmp=data[i];
+          data[i]=data[j];
+          data[j]=tmp;
+        }
+      }
+    }
+    array_init(return_value);
+    rmid=getzqfv(zqfval,&data,zqf_arr_count);
+    add_index_long(return_value,rmid,data[rmid]);
+    zval *myiteam;
+    MAKE_STD_ZVAL(myiteam);
+    array_init(myiteam);
+    for (i = 0;i<zqf_arr_count; ++i)
+    {
+        add_index_long(myiteam,i,data[i]);
+                
+    }
+    add_assoc_zval(return_value,"result",myiteam);
+    efree(zqfarr);
+    /*efree(myiteam);*/
+      
+}
+/*查找一维数组重复项*/
+PHP_METHOD(zqf,findrepetition)
+{
+    zval *zqf_arr;
+    int   zqf_arr_count;
+    HashTable *zqf_arr_hash;
+    zval **zqf_item;
+    char* key;
+    ulong idx,i,j;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &zqf_arr) == FAILURE) {
+      RETURN_NULL();
+    }
+    zqf_arr_hash = Z_ARRVAL_P(zqf_arr);
+    zqf_arr_count = zend_hash_num_elements(zqf_arr_hash);
+    int data[zqf_arr_count];  
+    zend_hash_internal_pointer_reset(zqf_arr_hash);
+    for (i = 0; i < zqf_arr_count; ++i)
+    {
+        zend_hash_get_current_data(zqf_arr_hash,(void**)&zqf_item); 
+        data[i]=(int)Z_STRVAL_PP(zqf_item);  
+        zend_hash_move_forward(zqf_arr_hash);  
+    }
+    array_init(return_value);
+    for (i = 0; i < zqf_arr_count; ++i)
+    {
+      for (j = i+1; j < zqf_arr_count; ++j)
+      {
+        if(data[i]==data[j]){
+          add_index_long(return_value,i,data[i]);
+          add_index_long(return_value,j,data[j]);
+        }
+      }
+    }
+    efree(zqf_arr);
+}
+
 PHP_METHOD(zqf,savefile)
 {
     zval *zqfbasestatic;
@@ -184,9 +299,9 @@ PHP_METHOD(zqf,autoadd)
      }else{
         ZQF_G(counter)--;
       }
-      MAKE_STD_ZVAL(zqflong);  
+      /*MAKE_STD_ZVAL(zqflong);  
       ZVAL_LONG(zqflong,ZQF_G(counter));
-      zend_update_property(Z_OBJCE_P(getThis()), getThis(),ZEND_STRL("zqfbasestatic"),zqflong TSRMLS_CC);
+      zend_update_property(Z_OBJCE_P(getThis()), getThis(),ZEND_STRL("zqfbasestatic"),zqflong TSRMLS_CC);*/
       RETURN_LONG(ZQF_G(counter));
     /*zval *zqfbase;
     zval *zqfbasestatic;
@@ -253,6 +368,8 @@ PHP_METHOD(zqf,__construct)
 }
 
 static zend_function_entry zqf_method[] = {
+  PHP_ME(zqf,findval,zqf_findval_arginfo,ZEND_ACC_PUBLIC)
+  PHP_ME(zqf,findrepetition,zqf_findrepetition_arginfo,ZEND_ACC_PUBLIC)
   PHP_ME(zqf,savefile,zqf_savefile_arginfo,ZEND_ACC_PUBLIC)
 	PHP_ME(zqf,autoadd,zqf_autoadd_arginfo,ZEND_ACC_PUBLIC)
   PHP_ME(zqf,__construct,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
