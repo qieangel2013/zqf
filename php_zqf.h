@@ -43,9 +43,8 @@
 
 ZEND_BEGIN_MODULE_GLOBALS(zqf)
   /*HashTable *configs;*/
-  long  counter,zqfflag;
-ZEND_END_MODULE_GLOBALS(zqf)  
-
+  long  counter,zqfflag,level,hint,casesensitive;
+ZEND_END_MODULE_GLOBALS(zqf)
 /* In every utility function you add that needs to use variables 
    in php_zqf_globals, call TSRMLS_FETCH(); after declaring other 
    variables used by that function, or better yet, pass in TSRMLS_CC
