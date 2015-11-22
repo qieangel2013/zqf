@@ -21,12 +21,19 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
+#include <gd.h>
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "php_zqf.h"
+#include <qrencode.h>
 #define ZQF_RES_NAME "zqf_resource"
+#define gdImageCreate gdImageCreate
+#define gdImagePng gdImagePng
+#define gdImageDestroy gdImageDestroy
+#define gdImageColorAllocate gdImageColorAllocate
+#define gdImageFill gdImageFill
+#define gdImageFilledRectangle gdImageFilledRectangle
 /* If you declare any globals in php_zqf.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(zqf)
 */
@@ -34,16 +41,23 @@ ZEND_DECLARE_MODULE_GLOBALS(zqf)
 /* True global resources - no need for thread safety here */
 static int le_zqf;
 zend_class_entry *zqf_ce;
-static int zqf_resource_descriptor;
+typedef struct _qrencode {
+    QRcode *code;
+}qrencode;
 ZEND_BEGIN_ARG_INFO_EX(zqf_autoadd_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(0,zqfjishu)
     ZEND_ARG_INFO(0,zqfsort)
     ZEND_ARG_INFO(0,is_zqfsets)
 ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(zqf_savefile_arginfo, 0, 0, 1)
-    ZEND_ARG_INFO(0,path)
-    ZEND_ARG_INFO(0,mode)
-    ZEND_ARG_INFO(0,ext)
+    ZEND_ARG_INFO(0, str)
+    ZEND_ARG_INFO(0, path)
+    ZEND_ARG_INFO(0, size)
+    ZEND_ARG_INFO(0, level)
+    ZEND_ARG_INFO(0, hint)
+    ZEND_ARG_INFO(0, red)
+    ZEND_ARG_INFO(0, green)
+    ZEND_ARG_INFO(0, blue)
 ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO_EX(zqf_findrepetition_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(0,zqf_arr)
@@ -58,10 +72,14 @@ static void php_zqf_init_globals(zend_zqf_globals *zqf_globals)
 {
     zqf_globals->zqfflag = 0;
 }
-static void php_myres_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC){  
-    FILE *fp = (FILE*)rsrc->ptr;  
-    fclose(fp);  
-}  
+static void qrencode_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC) {
+    qrencode *q = (qrencode *)rsrc->ptr;
+    if (q->code != NULL) {
+        //QRcode_free(q->code);
+        q->code = NULL;
+    }
+    efree(q);
+} 
 /* }}} */
 
 /** {{{ PHP_INI
@@ -70,8 +88,6 @@ static void php_myres_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC){
 	STD_PHP_INI_ENTRY("zqfbase","0", PHP_INI_ALL, OnUpdateLong, zqfbase, zend_zqf_globals, zqf_globals)
 	STD_PHP_INI_ENTRY("zqftype","0", PHP_INI_ALL, OnUpdateLong, zqftype, zend_zqf_globals, zqf_globals)
 PHP_INI_END();*/
-
-
 
 
 
@@ -236,27 +252,111 @@ PHP_METHOD(zqf,findrepetition)
     efree(zqf_arr);
 }
 
+gdImagePtr qrcode_png(QRcode *code, int fg_color[3], int bg_color[3], int size, int margin)
+{
+    int code_size = size / code->width;
+    code_size = (code_size == 0)  ? 1 : code_size;
+    int img_width = code->width * code_size + 2 * margin;
+    gdImagePtr img = gdImageCreate (img_width,img_width);
+    int img_fgcolor =  gdImageColorAllocate(img,fg_color[0],fg_color[1],fg_color[2]);
+    int img_bgcolor = gdImageColorAllocate(img,bg_color[0],bg_color[1],bg_color[2]);
+    gdImageFill(img,0,0,img_bgcolor);
+    unsigned char *p = code->data;
+    int x,y ,posx,posy;
+    for (y = 0 ; y < code->width ; y++)
+    {
+        for (x = 0 ; x < code->width ; x++)
+        {
+            if (*p & 1)
+            {
+                posx = x * code_size + margin;
+                posy = y * code_size + margin;
+                gdImageFilledRectangle(img,posx,posy,posx + code_size,posy + code_size,img_fgcolor);
+            }
+            p++;
+        }
+    }
+    return img;
+}
+
+
+
 PHP_METHOD(zqf,savefile)
 {
-    zval *zqfbasestatic;
-    zval *res;
-    FILE *fp;
+    char *str;
+    int str_len;
+    qrencode *qe;
+
+    long level = 2;
+    long hint  = 0;
     char *path;
     int path_len;
-    char *mode;
-    int mode_len;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ss", &path,&path_len,&mode,&mode_len) == FAILURE) {
-      RETURN_BOOL(0);
+
+    int int_bg_color[3] = {255,255,255} ;
+    
+    int size = 100;
+    int margin = 2;
+
+    int red = 0;
+    int green = 0;
+    int blue = 0;
+    int version = 3;
+    int casesensitive = 1;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ssl|lllll", &str,&str_len,&path, &path_len,&size, &level, &hint,&red, &green, &blue) == FAILURE) {
+      php_error_docref(NULL TSRMLS_CC, E_WARNING, "参数不正确!!!");
+        RETURN_FALSE;
     }
-    zqfbasestatic = zend_read_static_property(Z_OBJCE_P(getThis()),ZEND_STRL("zqfbasestatic"),0 TSRMLS_CC);
-    convert_to_string(zqfbasestatic);
-    fp=fopen(estrndup(path,path_len),estrndup(mode,mode_len));
+    QRecLevel q_level = (int)ZQF_G(level);
+    //QRencodeMode q_hint = (int)ZQF_G(hint);
+    QRencodeMode q_hint = QR_MODE_8;
+    if (level >= 0 && level <= 3) {
+        q_level = level;
+    }else{
+        q_level = 2;
+    }
+
+    if (hint){
+        q_hint = hint;
+    }else{
+        q_hint = QR_MODE_8;
+   }
+    if (red<0 || red>255) {
+        red = 0;
+    }
+    if (green<0 || green>255) {
+        green = 0;
+    }
+    if (blue<0 || blue>255) {
+        blue = 0;
+    }
+
+    int int_fg_color [3] = {red,green,blue};
+    QRcode *code = QRcode_encodeString(str, version, q_level, q_hint, casesensitive);
+    if (code == NULL) {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "字符串编码错误!!!");
+        RETURN_FALSE;
+    }
+
+    qe = emalloc(sizeof(qrencode));
+    qe->code = code;
+    FILE * out = fopen(path,"w+");
+    if (out == NULL){
+        php_error_docref (NULL TSRMLS_CC, E_WARNING, "can not open the file");
+        RETURN_FALSE;
+    }
+    gdImagePtr im = qrcode_png(qe->code,int_fg_color,int_bg_color,size,margin) ;
+    gdImagePng(im,out);
+    QRcode_free(qe->code);
+    qe->code = NULL;
+    gdImageDestroy(im);
+    fclose(out);
+    
     /*ZEND_REGISTER_RESOURCE(res,fp,zqf_resource_descriptor);
     fwrite(Z_STRVAL_P(zqfbasestatic), 1,Z_STRLEN_P(zqfbasestatic),fp);
     /*fprintf(fp,"%ld\n",Z_LVAL_P(zqfbasestatic));
     fclose(fp); */
     /*zend_hash_index_del(&EG(regular_list),res);*/
-    RETURN_BOOL(1);
+    RETURN_TRUE;
 
 
   /*zval *zqfbasee;
@@ -385,7 +485,22 @@ PHP_MINIT_FUNCTION(zqf)
 	zqf_ce=zend_register_internal_class(&ce TSRMLS_CC);
   zend_declare_property_long(zqf_ce, ZEND_STRL("zqfbase"),0,ZEND_ACC_PUBLIC TSRMLS_CC);
   zend_declare_property_long(zqf_ce, ZEND_STRL("zqfbasestatic"),0,ZEND_ACC_STATIC TSRMLS_CC);
-  zqf_resource_descriptor=zend_register_list_destructors_ex(php_myres_dtor, NULL, ZQF_RES_NAME, module_number);
+    /*REGISTER_LONG_CONSTANT("QRENCODE_QRECLEVEL_L", QR_ECLEVEL_L, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_QRECLEVEL_M", QR_ECLEVEL_M, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_QRECLEVEL_Q", QR_ECLEVEL_Q, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_QRECLEVEL_H", QR_ECLEVEL_H, CONST_CS|CONST_PERSISTENT);
+
+    REGISTER_LONG_CONSTANT("QRENCODE_MODE_NUL", QR_MODE_NUL, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_MODE_NUM", QR_MODE_NUM, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_MODE_AN", QR_MODE_AN, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_MODE_8", QR_MODE_8, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_MODE_KANJI", QR_MODE_KANJI, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_MODE_STRUCTURE", QR_MODE_STRUCTURE, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_MODE_ECI", QR_MODE_ECI, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_MODE_FNC1FIRST", QR_MODE_FNC1FIRST, CONST_CS|CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QRENCODE_MODE_FNC1SECOND", QR_MODE_FNC1SECOND, CONST_CS|CONST_PERSISTENT);
+
+  //zqf_resource_descriptor=zend_register_list_destructors_ex(qrencode_dtor, NULL, ZQF_RES_NAME, module_number);
     /*zend_declare_property_null(zqf_ce, "zqftype", sizeof("zqftype"), ZEND_ACC_PUBLIC TSRMLS_CC);*/
     /*if (!ZQF_G(configs)) {
     ZQF_G(configs) = (HashTable *)pemalloc(sizeof(HashTable), 1);
