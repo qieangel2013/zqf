@@ -32,5 +32,5 @@
             var_dump($result);//结果是Array ( [8] => 69 [result] => Array ( [0] => 1 [1] => 4 [2] => 10 [3] => 12 [4] => 12 [5] => 20 [6] => 23 [7] => 56 [8] => 69 [9] => 78 [10] => 89 [11] => 90 ) )
 ###二维码生成使用方法如下：
             $obj=new zqf();
-            $obj->savefile('https://www.baidu.com/s?wd=昌平香堂','./test.png',500);第一个参数是url，第二参数是保存路径，第三个参数树二维码长和宽
+            $obj->savefile('https://www.baidu.com/s?wd=昌平香堂','./test.png',500);第一个参数是url，第二参数是保存路径，第三个参数是二维码长或者宽
 ### 有什么问题可以及时联系我 qieangel@hotmail.com
