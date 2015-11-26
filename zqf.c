@@ -32,6 +32,7 @@
 #define gdImagePng gdImagePng
 #define gdImageDestroy gdImageDestroy
 #define gdImageColorAllocate gdImageColorAllocate
+#define gdImageColorAllocateAlpha gdImageColorAllocateAlpha
 #define gdImageFill gdImageFill
 #define gdImageFilledRectangle gdImageFilledRectangle
 /* If you declare any globals in php_zqf.h uncomment this:
@@ -53,6 +54,7 @@ ZEND_BEGIN_ARG_INFO_EX(zqf_savefile_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(0, str)
     ZEND_ARG_INFO(0, path)
     ZEND_ARG_INFO(0, size)
+    ZEND_ARG_INFO(0, is_tr)
     ZEND_ARG_INFO(0, level)
     ZEND_ARG_INFO(0, hint)
     ZEND_ARG_INFO(0, red)
@@ -252,14 +254,19 @@ PHP_METHOD(zqf,findrepetition)
     efree(zqf_arr);
 }
 
-gdImagePtr qrcode_png(QRcode *code, int fg_color[3], int bg_color[3], int size, int margin)
+gdImagePtr qrcode_png(QRcode *code, int fg_color[3], int bg_color[3], int size, int margin,long is_tr)
 {
     int code_size = size / code->width;
     code_size = (code_size == 0)  ? 1 : code_size;
     int img_width = code->width * code_size + 2 * margin;
     gdImagePtr img = gdImageCreate (img_width,img_width);
+    int img_bgcolor;
+    if(is_tr){
+      img_bgcolor = gdImageColorAllocateAlpha(img,0,0,0,gdAlphaTransparent);
+    }else{
+      img_bgcolor = gdImageColorAllocate(img,bg_color[0],bg_color[1],bg_color[2]);
+    }
     int img_fgcolor =  gdImageColorAllocate(img,fg_color[0],fg_color[1],fg_color[2]);
-    int img_bgcolor = gdImageColorAllocate(img,bg_color[0],bg_color[1],bg_color[2]);
     gdImageFill(img,0,0,img_bgcolor);
     unsigned char *p = code->data;
     int x,y ,posx,posy;
@@ -291,7 +298,7 @@ PHP_METHOD(zqf,savefile)
     long hint  = 0;
     char *path;
     int path_len;
-
+    long is_tr = 0;
     int int_bg_color[3] = {255,255,255} ;
     
     int size = 100;
@@ -302,7 +309,7 @@ PHP_METHOD(zqf,savefile)
     int blue = 0;
     int version = 3;
     int casesensitive = 1;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ssl|lllll", &str,&str_len,&path, &path_len,&size, &level, &hint,&red, &green, &blue) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ssl|llllll", &str,&str_len,&path, &path_len,&size,&is_tr,&level, &hint,&red, &green, &blue) == FAILURE) {
       php_error_docref(NULL TSRMLS_CC, E_WARNING, "参数不正确!!!");
         RETURN_FALSE;
     }
@@ -329,7 +336,10 @@ PHP_METHOD(zqf,savefile)
     if (blue<0 || blue>255) {
         blue = 0;
     }
-
+    if(is_tr){   
+    }else{
+      is_tr=0;
+    }
     int int_fg_color [3] = {red,green,blue};
     QRcode *code = QRcode_encodeString(str, version, q_level, q_hint, casesensitive);
     if (code == NULL) {
@@ -344,7 +354,7 @@ PHP_METHOD(zqf,savefile)
         php_error_docref (NULL TSRMLS_CC, E_WARNING, "can not open the file");
         RETURN_FALSE;
     }
-    gdImagePtr im = qrcode_png(qe->code,int_fg_color,int_bg_color,size,margin) ;
+    gdImagePtr im = qrcode_png(qe->code,int_fg_color,int_bg_color,size,margin,is_tr) ;
     gdImagePng(im,out);
     QRcode_free(qe->code);
     qe->code = NULL;
