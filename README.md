@@ -33,4 +33,6 @@
 ###二维码生成使用方法如下：
             $obj=new zqf();
             $obj->savefile('https://www.baidu.com/s?wd=昌平香堂','./test.png',500);第一个参数是url，第二参数是保存路径，第三个参数是二维码长或者宽
+            生成透明二维码：
+             $obj->savefile('https://www.baidu.com/s?wd=昌平香堂','./test.png',500,1);第四个参数默认不生成透明，要想生成透明得传一个参数
 ### 有什么问题可以及时联系我 qieangel@hotmail.com
