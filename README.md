@@ -10,6 +10,7 @@
             安装方法如下：
             sudo apt-get install libpng-dev
             sudo apt-get install libgd-dev
+            如果是php7版本需要是zqf_php7.c替换成zqf.c然后再编译
             致力于做工具类，其他的正在开发中
 ===================================
 ###高并发计数器使用方法如下：
