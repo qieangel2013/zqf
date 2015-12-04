@@ -36,16 +36,14 @@
 #ifdef ZTS
 #include "TSRM.h"
 #endif
-#if PHP_MAJOR_VERSION > 7
-#define zqf_get_data zend_hash_get_current_data
-#else
-static zval* zqf_get_data(HashTable *ht){
+#if PHP_MAJOR_VERSION <7
+  static zval* zqf_get_datas(HashTable *ht){
   zval **zqf_itemm;
   zend_hash_get_current_data(ht,(void**)&zqf_itemm);
   return zqf_itemm;
  }
-
-
+#else
+#define zqf_get_data zend_hash_get_current_data
 #endif
 /* 
   	Declare any global variables you may need between the BEGIN
