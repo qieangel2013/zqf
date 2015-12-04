@@ -23,7 +23,7 @@
 
 #define phpext_zqf_ptr &zqf_module_entry
 
-#define PHP_ZQF_VERSION "0.1.0" /* Replace with version number for your extension */
+#define ZQF_VERSION "1.1.0" /* Replace with version number for your extension */
 
 #ifdef PHP_WIN32
 #	define PHP_ZQF_API __declspec(dllexport)
@@ -36,7 +36,17 @@
 #ifdef ZTS
 #include "TSRM.h"
 #endif
+#if PHP_MAJOR_VERSION > 7
+#define zqf_get_data zend_hash_get_current_data
+#else
+static zval* zqf_get_data(HashTable *ht){
+  zval **zqf_itemm;
+  zend_hash_get_current_data(ht,(void**)&zqf_itemm);
+  return zqf_itemm;
+ }
 
+
+#endif
 /* 
   	Declare any global variables you may need between the BEGIN
 	and END macros here:    */ 
