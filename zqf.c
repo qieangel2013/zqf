@@ -74,7 +74,7 @@ static void php_zqf_init_globals(zend_zqf_globals *zqf_globals)
 {
     zqf_globals->zqfflag = 0;
 }
-static void qrencode_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC) {
+/*static void qrencode_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC) {
     qrencode *q = (qrencode *)rsrc->ptr;
     if (q->code != NULL) {
         //QRcode_free(q->code);
