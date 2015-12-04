@@ -187,7 +187,7 @@ PHP_METHOD(zqf,findval)
     zend_hash_internal_pointer_reset(zqf_arr_hash);
     for (i = 0; i < zqf_arr_count; ++i)
     {
-        zend_hash_get_current_data(zqf_arr_hash,(void**)&zqf_item); 
+        zqf_item=zqf_get_data(zqf_arr_hash); 
         data[i]=(int)Z_STRVAL_PP(zqf_item);  
         zend_hash_move_forward(zqf_arr_hash);  
     }
@@ -236,7 +236,7 @@ PHP_METHOD(zqf,findrepetition)
     zend_hash_internal_pointer_reset(zqf_arr_hash);
     for (i = 0; i < zqf_arr_count; ++i)
     {
-        zend_hash_get_current_data(zqf_arr_hash,(void**)&zqf_item); 
+        zqf_item=zqf_get_data(zqf_arr_hash); 
         data[i]=(int)Z_STRVAL_PP(zqf_item);  
         zend_hash_move_forward(zqf_arr_hash);  
     }
@@ -597,7 +597,7 @@ zend_module_entry zqf_module_entry = {
 	PHP_RINIT(zqf),		/* Replace with NULL if there's nothing to do at request start */
 	PHP_RSHUTDOWN(zqf),	/* Replace with NULL if there's nothing to do at request end */
 	PHP_MINFO(zqf),
-	PHP_ZQF_VERSION,
+	ZQF_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
 /* }}} */
