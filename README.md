@@ -1,6 +1,6 @@
 ###php扩展zqf 
             全局变量适用于高并发抢购、秒杀，数组算法处理等,由于添加了二维码生成功能，安装本扩展之前需要安装libqrencode，
-            安装方法如下：
+            安装方法如下：（兼容php7）
             wget http://fukuchi.org/works/qrencode/qrencode-3.4.4.tar.gz
             tar zxvf qrencode-3.4.4.tar.gz
             cd qrencode-3.4.4/
@@ -10,7 +10,6 @@
             安装方法如下：
             sudo apt-get install libpng-dev
             sudo apt-get install libgd-dev
-            如果是php7版本需要是zqf_php7.c替换成zqf.c然后再编译
             致力于做工具类，其他的正在开发中
 ===================================
 ###高并发计数器使用方法如下：
