@@ -1,5 +1,5 @@
 ###php扩展zqf （兼容php7）
-            全局变量适用于高并发抢购、秒杀，数组算法处理等,由于添加了二维码生成功能，安装本扩展之前需要安装libqrencode，
+            全局变量适用于高并发抢购、秒杀，红包生成，数组算法处理等,由于添加了二维码生成功能，安装本扩展之前需要安装libqrencode，
             安装方法如下：（兼容php7）
             wget http://fukuchi.org/works/qrencode/qrencode-3.4.4.tar.gz
             tar zxvf qrencode-3.4.4.tar.gz
@@ -12,6 +12,14 @@
             sudo apt-get install libgd-dev
             致力于做工具类，其他的正在开发中
 ===================================
+###红包生成算法（拼手气红包和普通红包）
+            $obj=new zqf();
+            第一个参数是红包总额，第二个人参数红包数量，第三个参数默认代表拼手气红包，设置为1的话为普通红包
+            拼手气红包
+            $hongb= $obj->hongbao(10,8);或者$hongb= $obj->hongbao(10,8,0);
+            普通红包，每个人数额一样设置第三个参数
+            $hongb= $obj->hongbao(10,8,1);
+            var_dump($hongb);
 ###高并发计数器使用方法如下：
             首先安装php扩展zqf.so
             phpize来安装
