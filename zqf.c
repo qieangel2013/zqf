@@ -22,6 +22,9 @@
 #include "config.h"
 #endif
 #include <gd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
@@ -68,7 +71,11 @@ ZEND_BEGIN_ARG_INFO_EX(zqf_findval_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(0,zqfarr)
     ZEND_ARG_INFO(0,zqfval)
 ZEND_END_ARG_INFO()
-
+ZEND_BEGIN_ARG_INFO_EX(zqf_hongbao_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0,zqfmoney)
+    ZEND_ARG_INFO(0,zqfcount)
+    ZEND_ARG_INFO(0,zqftype)
+ZEND_END_ARG_INFO()
 
 static void php_zqf_init_globals(zend_zqf_globals *zqf_globals)
 {
@@ -136,15 +143,70 @@ static void php_zqf_init_globals(zend_zqf_globals *zqf_globals)
 /* {{{ PHP_MINIT_FUNCTION
  */
 
+int my_rand(int min, int max)
+{
+    static int _seed = 0;
+    assert(max > min);
 
-
-
-
+    if (_seed == 0)
+    {
+        _seed = time(NULL);
+        srand(_seed);
+    }
+    int _rand = rand();
+    _rand = min + (int) ((double) ((double) (max) - (min) + 1.0) * ((_rand) / ((RAND_MAX) + 1.0)));
+    return _rand;
+}
 /* }}} */
 
 /* {{{ PHP_MINFO_FUNCTION
  */
-
+/*红包简单算法*/
+PHP_METHOD(zqf,hongbao)
+{
+  zval *zqfmoney;
+  double moneyss;
+  long zqfcount;
+  long zqftype=0;
+  const double min=0.01;
+  double safe_total;
+  double moneys;
+  int i;
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zl|l", &zqfmoney,&zqfcount,&zqftype) == FAILURE) {
+      php_error_docref(NULL TSRMLS_CC, E_WARNING, "参数不正确!!!");
+        RETURN_FALSE;
+    }
+    switch(Z_TYPE_P(zqfmoney)){
+      case IS_LONG:
+        moneyss=(double)Z_LVAL_P(zqfmoney);
+        break;
+      case IS_DOUBLE:
+        moneyss=((int)Z_DVAL_P(zqfmoney)*100)/100.0;
+       break;
+      default:
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "参数不正确!!!");
+        RETURN_FALSE;
+        break;
+    }
+    array_init(return_value);
+     if(zqftype){
+        moneys=((int)(moneyss*100/zqfcount))/100.0;
+        for (i = 0; i < zqfcount; ++i)
+       {
+          add_index_double(return_value,i,moneys);
+        }
+    }else{
+      for (i = 1; i < zqfcount; ++i)
+    {
+      safe_total=(moneyss-(zqfcount-i)*min)/(zqfcount-i);
+      moneys=my_rand((int)(min*100),(int)(safe_total*100))/100.0;
+      moneyss -=moneys;
+      add_index_double(return_value,i-1,moneys);
+    }
+  add_index_double(return_value,zqfcount-1,moneyss);
+    }
+  /*efree(zqfmoney);*/
+}
 
 
 static int getzqfv(long val,int arr[],int len){
@@ -478,6 +540,7 @@ PHP_METHOD(zqf,__construct)
 }
 
 static zend_function_entry zqf_method[] = {
+  PHP_ME(zqf,hongbao,zqf_hongbao_arginfo,ZEND_ACC_PUBLIC)
   PHP_ME(zqf,findval,zqf_findval_arginfo,ZEND_ACC_PUBLIC)
   PHP_ME(zqf,findrepetition,zqf_findrepetition_arginfo,ZEND_ACC_PUBLIC)
   PHP_ME(zqf,savefile,zqf_savefile_arginfo,ZEND_ACC_PUBLIC)
@@ -565,7 +628,7 @@ PHP_MINFO_FUNCTION(zqf)
 {
 	php_info_print_table_start();
 	php_info_print_table_header(2, "zqf support", "enabled");
-	php_info_print_table_row(2, "version", "1.0");
+	php_info_print_table_row(2, "version", "2.0.0");
 	php_info_print_table_row(2, "Author", "qieangel2013");
 	php_info_print_table_row(2, "adress", "904208360@qq.com");
 	php_info_print_table_end();
