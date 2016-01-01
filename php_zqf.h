@@ -23,7 +23,7 @@
 
 #define phpext_zqf_ptr &zqf_module_entry
 
-#define ZQF_VERSION "1.1.0" /* Replace with version number for your extension */
+#define ZQF_VERSION "2.0.0" /* Replace with version number for your extension */
 
 #ifdef PHP_WIN32
 #	define PHP_ZQF_API __declspec(dllexport)
