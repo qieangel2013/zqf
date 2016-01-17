@@ -76,6 +76,9 @@ ZEND_BEGIN_ARG_INFO_EX(zqf_hongbao_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(0,zqfcount)
     ZEND_ARG_INFO(0,zqftype)
 ZEND_END_ARG_INFO()
+ZEND_BEGIN_ARG_INFO_EX(zqf_quicksort_arginfo, 0, 0, 1)
+    ZEND_ARG_INFO(0,zqf_arr)
+ZEND_END_ARG_INFO()
 
 static void php_zqf_init_globals(zend_zqf_globals *zqf_globals)
 {
@@ -208,7 +211,75 @@ PHP_METHOD(zqf,hongbao)
   /*efree(zqfmoney);*/
 }
 
+void quiksort(int a[],int low,int high)
+{
+    int i = low;
+    int j = high;
+    int temp = a[i];
+    if( low < high)
+    {          
+        while(i < j) 
+        {
+            while((a[j] >= temp) && (i < j))
+            { 
+                j--; 
+            }
+            a[i] = a[j];
+            while((a[i] <= temp) && (i < j))
+            {
+                i++; 
+            }  
+            a[j]= a[i];
+        }
+        a[i] = temp;
+        quiksort(a,low,i-1);
+        quiksort(a,j+1,high);
+    }
+    else
+    {
+        return;
+    }
+}
 
+/*快速排序算法*/
+PHP_METHOD(zqf,quicksort)
+{
+
+    zval *zqf_arr;
+    int   zqf_arr_count;
+    HashTable *zqf_arr_hash;
+    zval **zqf_item;
+    zval *zqf_items;
+    ulong i,idx;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &zqf_arr) == FAILURE) {
+      RETURN_NULL();
+    }
+    zqf_arr_hash = Z_ARRVAL_P(zqf_arr);
+    zqf_arr_count = zend_hash_num_elements(zqf_arr_hash);
+    int data[zqf_arr_count];  
+#if PHP_MAJOR_VERSION <7
+    zend_hash_internal_pointer_reset(zqf_arr_hash);
+    for (i = 0; i < zqf_arr_count; ++i)
+    {
+        zqf_item=zqf_get_data(zqf_arr_hash); 
+        data[i]=(int)Z_STRVAL_PP(zqf_item);  
+        zend_hash_move_forward(zqf_arr_hash);  
+    }
+#else
+ZEND_HASH_FOREACH_KEY_VAL(zqf_arr_hash,idx,i,zqf_items)
+{   if(Z_TYPE_P(zqf_items) == IS_LONG) {
+        data[idx]=Z_LVAL_P(zqf_items);
+    }
+  } ZEND_HASH_FOREACH_END();
+#endif
+    quiksort(data,0,zqf_arr_count-1);
+    array_init(return_value);
+     for (i = 0; i < zqf_arr_count; ++i)
+    {
+        add_index_long(return_value,i,data[i]);
+    }
+    /*efree(zqf_arr);*/
+}
 static int getzqfv(long val,int arr[],int len){
     int low;
     int high;
@@ -237,6 +308,7 @@ PHP_METHOD(zqf,findval)
     int   zqf_arr_count;
     HashTable *zqf_arr_hash;
     zval **zqf_item;
+    zval *zqf_items;
     char* key;
     ulong idx;
     int rmid,i,j,tmp;
@@ -246,6 +318,7 @@ PHP_METHOD(zqf,findval)
     zqf_arr_hash = Z_ARRVAL_P(zqfarr);
     zqf_arr_count = zend_hash_num_elements(zqf_arr_hash);
     int data[zqf_arr_count];  
+#if PHP_MAJOR_VERSION <7
     zend_hash_internal_pointer_reset(zqf_arr_hash);
     for (i = 0; i < zqf_arr_count; ++i)
     {
@@ -253,6 +326,13 @@ PHP_METHOD(zqf,findval)
         data[i]=(int)Z_STRVAL_PP(zqf_item);  
         zend_hash_move_forward(zqf_arr_hash);  
     }
+#else
+ZEND_HASH_FOREACH_KEY_VAL(zqf_arr_hash,idx,i,zqf_items)
+{   if(Z_TYPE_P(zqf_items) == IS_LONG) {
+        data[idx]=Z_LVAL_P(zqf_items);
+    }
+  } ZEND_HASH_FOREACH_END();
+#endif  
     for (i = 0; i < zqf_arr_count; ++i)
     {
       for (j = 0; j < zqf_arr_count; ++j)
@@ -276,8 +356,8 @@ PHP_METHOD(zqf,findval)
                 
     }
     add_assoc_zval(return_value,"result",myiteam);
-    efree(zqfarr);
-    /*efree(myiteam);*/
+    /*efree(zqfarr);
+    efree(myiteam);*/
       
 }
 /*查找一维数组重复项*/
@@ -287,6 +367,7 @@ PHP_METHOD(zqf,findrepetition)
     int   zqf_arr_count;
     HashTable *zqf_arr_hash;
     zval **zqf_item;
+    zval *zqf_items;
     char* key;
     ulong idx,i,j;
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "a", &zqf_arr) == FAILURE) {
@@ -294,7 +375,8 @@ PHP_METHOD(zqf,findrepetition)
     }
     zqf_arr_hash = Z_ARRVAL_P(zqf_arr);
     zqf_arr_count = zend_hash_num_elements(zqf_arr_hash);
-    int data[zqf_arr_count];  
+    int data[zqf_arr_count];
+  #if PHP_MAJOR_VERSION <7  
     zend_hash_internal_pointer_reset(zqf_arr_hash);
     for (i = 0; i < zqf_arr_count; ++i)
     {
@@ -302,6 +384,13 @@ PHP_METHOD(zqf,findrepetition)
         data[i]=(int)Z_STRVAL_PP(zqf_item);  
         zend_hash_move_forward(zqf_arr_hash);  
     }
+#else
+ZEND_HASH_FOREACH_KEY_VAL(zqf_arr_hash,idx,i,zqf_items)
+{   if(Z_TYPE_P(zqf_items) == IS_LONG) {
+        data[idx]=Z_LVAL_P(zqf_items);
+    }
+  } ZEND_HASH_FOREACH_END();
+#endif  
     array_init(return_value);
     for (i = 0; i < zqf_arr_count; ++i)
     {
@@ -313,7 +402,7 @@ PHP_METHOD(zqf,findrepetition)
         }
       }
     }
-    efree(zqf_arr);
+    /*efree(zqf_arr);*/
 }
 
 gdImagePtr qrcode_png(QRcode *code, int fg_color[3], int bg_color[3], int size, int margin,long is_tr)
@@ -540,6 +629,7 @@ PHP_METHOD(zqf,__construct)
 }
 
 static zend_function_entry zqf_method[] = {
+  PHP_ME(zqf,quicksort,zqf_quicksort_arginfo,ZEND_ACC_PUBLIC)
   PHP_ME(zqf,hongbao,zqf_hongbao_arginfo,ZEND_ACC_PUBLIC)
   PHP_ME(zqf,findval,zqf_findval_arginfo,ZEND_ACC_PUBLIC)
   PHP_ME(zqf,findrepetition,zqf_findrepetition_arginfo,ZEND_ACC_PUBLIC)
