@@ -17,12 +17,12 @@ php:
 notifications:
   email: 904208360@qq.com
    
-env:
-  - REPORT_EXIT_STATUS=1 NO_INTERACTION=1
+#env:
+#  - REPORT_EXIT_STATUS=1 NO_INTERACTION=1
 
 #Compile
-before_script:
-    - ./travis/compile.sh
+#before_script:
+#    - ./travis/compile.sh
 
 script:
     - exit 0
