@@ -12,7 +12,7 @@
             sudo apt-get install libgd-dev
             致力于做工具类，其他的正在开发中
 	    zqf扩展安装
-	    首先下载源码git clone https://github.com/qieangel2013/zqf.git
+	    首先下载源码git clone https://github.com/qieangel2013/zqf.git或者composer安装
 	    然后cd到当前目录/usr/local/php/bin/phpize
 	    ./configure --with-php-config=/usr/local/php/bin/php-config
 	    make && make install
