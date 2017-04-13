@@ -1,7 +1,7 @@
 ### php扩展zqf （兼容php7）
 	    全局变量适用于高并发抢购、秒杀，红包生成，数组算法处理等,由于添加了二维码生成功能
 	    安装本扩展之前需要安装libqrencode
-	    依赖安装方法如下：（兼容php7）
+	    依赖安装方法如下：
             wget http://fukuchi.org/works/qrencode/qrencode-3.4.4.tar.gz
             tar zxvf qrencode-3.4.4.tar.gz
             cd qrencode-3.4.4/
@@ -12,7 +12,7 @@
             sudo apt-get install libpng-dev
             sudo apt-get install libgd-dev
             致力于做工具类，其他的正在开发中
-	    zqf扩展安装
+	    zqf扩展安装（兼容php7）
 	    首先下载源码git clone https://github.com/qieangel2013/zqf.git或者composer安装
 	    然后cd到当前目录/usr/local/php/bin/phpize
 	    ./configure --with-php-config=/usr/local/php/bin/php-config
