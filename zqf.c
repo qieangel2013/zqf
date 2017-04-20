@@ -199,7 +199,7 @@ PHP_METHOD(zqf,hongbao)
         for (i = 0; i < zqfcount; ++i)
        {
        	  sprintf(buf, "%.2f", moneys);
-	  	  sscanf(buf, "%f", &moneys);
+	  sscanf(buf, "%f", &moneys);
           add_index_string(return_value,i,buf);
           moneys=strtof(buf, &pEnd);
           memset(buf,0,sizeof(buf));
@@ -211,13 +211,13 @@ PHP_METHOD(zqf,hongbao)
       moneys=my_rand((int)(min*100),(int)(safe_total*100))/100.0;
       moneyss -=moneys;
       sprintf(buf, "%.2f", moneys);
-	  sscanf(buf, "%f", &moneys);
+      sscanf(buf, "%f", &moneys);
       add_index_string(return_value,i-1,buf);
       moneys=strtof(buf, &pEnd);
       memset(buf,0,sizeof(buf));
     }
     sprintf(buf, "%.2f", moneyss);
-	sscanf(buf, "%f", &moneyss);
+    sscanf(buf, "%f", &moneyss);
     add_index_string(return_value,zqfcount-1,buf);
     memset(buf,0,sizeof(buf));
     }
