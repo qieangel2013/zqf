@@ -175,6 +175,8 @@ PHP_METHOD(zqf,hongbao)
   double safe_total;
   double moneys;
   int i;
+  char buf[10];
+  char* pEnd;
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zl|l", &zqfmoney,&zqfcount,&zqftype) == FAILURE) {
       php_error_docref(NULL TSRMLS_CC, E_WARNING, "参数不正确!!!");
         RETURN_FALSE;
@@ -196,7 +198,11 @@ PHP_METHOD(zqf,hongbao)
         moneys=((int)(moneyss*100/zqfcount))/100.0;
         for (i = 0; i < zqfcount; ++i)
        {
-          add_index_double(return_value,i,moneys);
+       	  sprintf(buf, "%.2f", moneys);
+	  	  sscanf(buf, "%f", &moneys);
+          add_index_string(return_value,i,buf);
+          moneys=strtof(buf, &pEnd);
+          memset(buf,0,sizeof(buf));
         }
     }else{
       for (i = 1; i < zqfcount; ++i)
@@ -204,9 +210,16 @@ PHP_METHOD(zqf,hongbao)
       safe_total=(moneyss-(zqfcount-i)*min)/(zqfcount-i);
       moneys=my_rand((int)(min*100),(int)(safe_total*100))/100.0;
       moneyss -=moneys;
-      add_index_double(return_value,i-1,moneys);
+      sprintf(buf, "%.2f", moneys);
+	  sscanf(buf, "%f", &moneys);
+      add_index_string(return_value,i-1,buf);
+      moneys=strtof(buf, &pEnd);
+      memset(buf,0,sizeof(buf));
     }
-  add_index_double(return_value,zqfcount-1,moneyss);
+    sprintf(buf, "%.2f", moneyss);
+	sscanf(buf, "%f", &moneyss);
+    add_index_string(return_value,zqfcount-1,buf);
+    memset(buf,0,sizeof(buf));
     }
   /*efree(zqfmoney);*/
 }
