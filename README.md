@@ -58,9 +58,9 @@
              $obj->savefile('https://www.baidu.com/s?wd=昌平香堂','./test.png',500,1);第四个参数默认不生成透明，要想生成透明得传一个参数
 ### liveim是一款直播平台，内置im聊天功能
 	由于未开源，需要授权可以获取源代码
-http://www.51bixue.com/ (演示地址)<br/>
-http://www.51bixue.com/public/uploads/LiveIm.apk (安卓演示)<br/>
-http://www.51bixue.com/public/uploads/LiveImInstall.exe (pc端演示)
+http://www.weivq.com:88/ (演示地址)<br/>
+http://www.weivq.com:88/public/uploads/LiveIm.apk (安卓演示)<br/>
+http://www.weivq.com:88/public/uploads/LiveImInstall.exe (pc端演示)
 ![](https://github.com/qieangel2013/yaf/blob/master/public/images/windowspc.png)
 ![](https://github.com/qieangel2013/yaf/blob/master/public/images/jt.png)
 ![](https://github.com/qieangel2013/yaf/blob/master/public/images/jtmobilet.png)
