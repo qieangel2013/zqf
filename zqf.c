@@ -205,8 +205,12 @@ PHP_METHOD(zqf,hongbao)
         for (i = 0; i < zqfcount; ++i)
        {
        	  sprintf(buf, "%.2f", moneys);
-	  sscanf(buf, "%f", &moneys);
+	        sscanf(buf, "%f", &moneys);
+#if PHP_MAJOR_VERSION <7
+          add_index_string(return_value,i,buf,1);
+#else
           add_index_string(return_value,i,buf);
+#endif
           moneys=strtof(buf, &pEnd);
           memset(buf,0,sizeof(buf));
         }
@@ -218,13 +222,21 @@ PHP_METHOD(zqf,hongbao)
       moneyss -=moneys;
       sprintf(buf, "%.2f", moneys);
       sscanf(buf, "%f", &moneys);
-      add_index_string(return_value,i-1,buf);
+#if PHP_MAJOR_VERSION <7
+          add_index_string(return_value,i-1,buf,1);
+#else
+          add_index_string(return_value,i-1,buf);
+#endif
       moneys=strtof(buf, &pEnd);
       memset(buf,0,sizeof(buf));
     }
     sprintf(buf, "%.2f", moneyss);
     sscanf(buf, "%f", &moneyss);
-    add_index_string(return_value,zqfcount-1,buf);
+#if PHP_MAJOR_VERSION <7
+          add_index_string(return_value,zqfcount-1,buf,1);
+#else
+          add_index_string(return_value,zqfcount-1,buf);
+#endif
     memset(buf,0,sizeof(buf));
     }
   /*efree(zqfmoney);*/
@@ -769,7 +781,7 @@ PHP_MINFO_FUNCTION(zqf)
 {
 	php_info_print_table_start();
 	php_info_print_table_header(2, "zqf support", "enabled");
-	php_info_print_table_row(2, "version", "2.0.0");
+	php_info_print_table_row(2, "version", "2.0.1");
 	php_info_print_table_row(2, "Author", "qieangel2013");
 	php_info_print_table_row(2, "adress", "904208360@qq.com");
 	php_info_print_table_end();
