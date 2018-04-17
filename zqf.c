@@ -38,6 +38,11 @@
 #define gdImageColorAllocateAlpha gdImageColorAllocateAlpha
 #define gdImageFill gdImageFill
 #define gdImageFilledRectangle gdImageFilledRectangle
+#define gdImageCopyResampled  gdImageCopyResampled
+#define gdImageCreateFromPng  gdImageCreateFromPng
+#define gdImageTrueColorToPalette  gdImageTrueColorToPalette
+#define INT_MAX 2147483647   
+#define E_MAX   255 
 /* If you declare any globals in php_zqf.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(zqf)
 */
@@ -58,6 +63,7 @@ ZEND_BEGIN_ARG_INFO_EX(zqf_savefile_arginfo, 0, 0, 1)
     ZEND_ARG_INFO(0, path)
     ZEND_ARG_INFO(0, size)
     ZEND_ARG_INFO(0, is_tr)
+    ZEND_ARG_INFO(0, logopath)
     ZEND_ARG_INFO(0, level)
     ZEND_ARG_INFO(0, hint)
     ZEND_ARG_INFO(0, red)
@@ -418,12 +424,12 @@ ZEND_HASH_FOREACH_KEY_VAL(zqf_arr_hash,idx,i,zqf_items)
     /*efree(zqf_arr);*/
 }
 
-gdImagePtr qrcode_png(QRcode *code, int fg_color[3], int bg_color[3], int size, int margin,long is_tr)
+gdImagePtr qrcode_png(QRcode *code, int fg_color[3], int bg_color[3], int size, int margin,long is_tr,char *logopath,long logopath_len)
 {
     int code_size = size / code->width;
     code_size = (code_size == 0)  ? 1 : code_size;
     int img_width = code->width * code_size + 2 * margin;
-    gdImagePtr img = gdImageCreate (img_width,img_width);
+    gdImagePtr img = gdImageCreate (img_width,img_width); 
     int img_bgcolor;
     if(is_tr){
       img_bgcolor = gdImageColorAllocateAlpha(img,0,0,0,gdAlphaTransparent);
@@ -447,6 +453,35 @@ gdImagePtr qrcode_png(QRcode *code, int fg_color[3], int bg_color[3], int size, 
             p++;
         }
     }
+    if(logopath_len>0){
+      FILE * logoinput = fopen(logopath,"rb");
+      if (logoinput == NULL){
+        php_error_docref (NULL TSRMLS_CC, E_WARNING, "can not open the file");
+        return ;
+      }
+      gdImagePtr logoimg = gdImageCreateFromPng(logoinput);
+      gdImageTrueColorToPalette(logoimg,0,65535);
+      rewind(logoinput);              
+      int  place = 0,index = 0,i;  
+      char data;  
+      int size[8];   
+      while(place<=24)                                                               
+       {  
+            place++;  
+            data = fgetc(logoinput);  
+            if(place>16){  
+                size[index] =(int) data;  
+                index++;  
+            }  
+       }  
+      for(i=0;i<4;i++) if(size[i]<0) size[i] = (size[i]&INT_MAX)&E_MAX;   
+      int logo_width = 256*size[2]+size[3];
+      int logo_height = 256*size[6]+size[7]; 
+      int tmpwidth=img_width/5;
+      int scale = logo_width/tmpwidth;
+      gdImageCopyResampled(img,logoimg,(img_width-tmpwidth)/2,(img_width-tmpwidth)/2,0,0,tmpwidth,logo_height/scale,logo_width,logo_height);
+      fclose(logoinput);
+    }
     return img;
 }
 
@@ -462,6 +497,8 @@ PHP_METHOD(zqf,savefile)
     long hint  = 0;
     char *path;
     int path_len;
+    char *logopath;
+    int logopath_len;
     long is_tr = 0;
     int int_bg_color[3] = {255,255,255} ;
     
@@ -473,7 +510,8 @@ PHP_METHOD(zqf,savefile)
     int blue = 0;
     int version = 3;
     int casesensitive = 1;
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ssl|llllll", &str,&str_len,&path, &path_len,&size,&is_tr,&level, &hint,&red, &green, &blue) == FAILURE) {
+    gdImagePtr im;
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ssl|lslllll", &str,&str_len,&path, &path_len,&size,&is_tr,&logopath, &logopath_len,&level, &hint,&red, &green, &blue) == FAILURE) {
       php_error_docref(NULL TSRMLS_CC, E_WARNING, "参数不正确!!!");
         RETURN_FALSE;
     }
@@ -518,7 +556,7 @@ PHP_METHOD(zqf,savefile)
         php_error_docref (NULL TSRMLS_CC, E_WARNING, "can not open the file");
         RETURN_FALSE;
     }
-    gdImagePtr im = qrcode_png(qe->code,int_fg_color,int_bg_color,size,margin,is_tr) ;
+    im = qrcode_png(qe->code,int_fg_color,int_bg_color,size,margin,is_tr,logopath,logopath_len);   
     gdImagePng(im,out);
     QRcode_free(qe->code);
     qe->code = NULL;
