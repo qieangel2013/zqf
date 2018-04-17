@@ -91,14 +91,9 @@
 	echo (($t2-$t1)*1000).':ms';
 	?>
 	运行时间:23.189067840576:ms
-### liveim是一款直播平台，内置im聊天功能
-	由于未开源，需要授权可以获取源代码
-http://www.weivq.com:88/ (演示地址)<br/>
-http://www.weivq.com:88/public/uploads/LiveIm.apk (安卓演示)<br/>
-http://www.weivq.com:88/public/uploads/LiveImInstall.exe (pc端演示)
-![](https://github.com/qieangel2013/yaf/blob/master/public/images/windowspc.png)
-![](https://github.com/qieangel2013/yaf/blob/master/public/images/jt.png)
-![](https://github.com/qieangel2013/yaf/blob/master/public/images/jtmobilet.png)
+### 项目地址
+	github：https://github.com/qieangel2013/zqf
+	oschina：https://gitee.com/qieangel2013/zqf
 ### 交流使用
 	交流群：337937322
 ### 如果你对我的辛勤劳动给予肯定，请给我捐赠，你的捐赠是我最大的动力
