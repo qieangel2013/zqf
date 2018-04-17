@@ -26,7 +26,8 @@
 	    /home/zqf-master/zqf.c:525: error: expected ‘;’ before ‘im’
 	    /home/zqf-master/zqf.c:571: error: ‘im’ undeclared (first use in this function)
 	    说明没有安装gd库
-	    yum install gd-devel 
+	    yum install gd-devel
+	    然后重新make && make install
 	    修改php.ini添加extension=zqf.so
 	    重启php-fpm
 ===================================
