@@ -58,6 +58,28 @@
              $obj->savefile('https://www.baidu.com/s?wd=昌平香堂','./test.png',500,1);第四个参数默认不生成透明，要想生成透明得传一个参数
 	     生成带有logo的二维码：
 	     $obj->savefile('https://www.baidu.com/s?wd=昌平香堂','./test.png',500,0,"./logo.png");第五个参数是logo的路径，现在只支持png格式的logo图片
+### 和phpqrcode对比
+	php-qrencode代码:
+	<?php
+	$t1 = microtime(true);
+	$obj=new zqf();
+        $obj->savefile('https://www.baidu.com/s?wd=昌平香堂','./test.png',500);
+	$t2 = microtime(true);
+	echo (($t2-$t1)*1000).':ms';
+	?>
+	
+	运行时间:0.60701370239258:ms
+	
+	phpqrcode代码:
+
+	<?php
+	include('./phpqrcode/phpqrcode.php'); 
+	$t1 = microtime(true);
+	QRcode::png("https://www.baidu.com/s?wd=昌平香堂",'./test.png',QR_ECLEVEL_Q,500);
+	$t2 = microtime(true);
+	echo (($t2-$t1)*1000).':ms';
+	?>
+	运行时间:23.189067840576:ms
 ### liveim是一款直播平台，内置im聊天功能
 	由于未开源，需要授权可以获取源代码
 http://www.weivq.com:88/ (演示地址)<br/>
