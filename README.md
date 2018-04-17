@@ -6,7 +6,7 @@
             tar zxvf qrencode-3.4.4.tar.gz
             cd qrencode-3.4.4/
             ./configure
-            make&make install
+            make && make install
             如果没有安装libpng和libgd，也需要安装
             安装方法如下：
             sudo apt-get install libpng-dev
@@ -17,6 +17,16 @@
 	    然后cd到当前目录/usr/local/php/bin/phpize
 	    ./configure --with-php-config=/usr/local/php/bin/php-config
 	    make && make install
+	    make过程中如果出现
+	    error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘qrcode_png’
+	    /home/zqf-master/zqf.c: In function ‘zim_zqf_savefile’:
+	    /home/zqf-master/zqf.c:525: error: ‘gdImagePtr’ undeclared (first use in this function)
+	    /home/zqf-master/zqf.c:525: error: (Each undeclared identifier is reported only once
+	    /home/zqf-master/zqf.c:525: error: for each function it appears in.)
+	    /home/zqf-master/zqf.c:525: error: expected ‘;’ before ‘im’
+	    /home/zqf-master/zqf.c:571: error: ‘im’ undeclared (first use in this function)
+	    说明没有安装gd库
+	    yum install gd-devel 
 	    修改php.ini添加extension=zqf.so
 	    重启php-fpm
 ===================================
