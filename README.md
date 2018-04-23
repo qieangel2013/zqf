@@ -74,7 +74,7 @@
 	<?php
 	$t1 = microtime(true);
 	$obj=new zqf();
-        $obj->savefile('https://www.baidu.com/s?wd=昌平香堂','./test.png',500);
+	$obj->savefile('https://www.baidu.com/s?wd=昌平香堂','./test.png',500);
 	$t2 = microtime(true);
 	echo (($t2-$t1)*1000).':ms';
 	?>
